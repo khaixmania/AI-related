@@ -11,22 +11,28 @@ class AtomPlacement:
         for atom_type, quantity in enumerate(self.n_types):
             for i in range(quantity):
                 sites.append(atom_type)
-
         return AtomPlacementState(sites)
 
     # Returns the neighbor states of the given state as a list of AtomPlacementState
     def neighbors(self, state: AtomPlacementState) -> list[AtomPlacementState]:
-
-        # TODO
-
-        return []
+        neighbors_list=[]
+        n = len(state.sites_assignment)
+        for u in range (n):
+            for v in range(u+1,n):
+                current = state.sites_assignment.copy()
+                if current[u] != current[v]:
+                    current[u], current[v] = current[v], current[u]
+                    neighbors_list.append(AtomPlacementState(current))
+        return neighbors_list
 
     # Returns the objective value of the given state
     def value(self, state: AtomPlacementState) -> int:
-
-        # TODO
-
-        return 0
+        total_energy=0
+        for u,v in self.edges:
+            type_u = state.sites_assignment[u]
+            type_v = state.sites_assignment[v]
+            total_energy+= self.energy_matrix[type_u][type_v]
+        return total_energy
 
     def __init__(self, filename: str):
         file = open(filename)
