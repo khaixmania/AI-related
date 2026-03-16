@@ -10,8 +10,8 @@ if __name__ == '__main__':
     init_state = problem.init_state()
     step_limit = 100
     node = random_walk(problem, step_limit)
-    # node = maxvalue(problem, step_limit)
-    # node = randomized_maxvalue(problem, step_limit)
+    node = max_value(problem, step_limit)
+    node = randomized_max_value(problem, step_limit)
     print("Best solution found:")
     print(f"Objective: {node.value()}")
     print(f"State: {node.state}")
