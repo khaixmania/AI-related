@@ -4,11 +4,103 @@ from pycsp3 import *
 
 
 def solve_minesweeper(clues: list[list[int]]) -> list[(int, int)]:
-    clear()
+    n = len(clues)
+    m = len(clues[0])
+    x = VarArray(size=[n, m], dom = {0,1})
+    #bombre représentée par -1
+    satisfy(
+        #[(x[i][j] < 6) for i in [0, n-1] for j in range(1, m-1)], check if les éléments en bordures horizontal on un nombre possible de bombes (<6)
+        #[(x[i][j] < 6) for i in range(1, n-1) for j in [0, m-1]], #check if les éléments en bordures verticales on un nombre possible de bombes (<6)
+        #[(x[i][j] < 4) for i in [0, n-1] for j in [0, m-1]], #check if the corner are < 4
+        [(x[i][j] == 0)
+        for i in range(n)
+        for j in range(m)
+        if clues[i][j] != -1],
 
-    # TODO
+        #Tout ce qui n'est pas en bordure (8 cases à vérifier)
+        [Sum((x[i+dec_i][j+dec_j])
+         for dec_i in [-1,0,1]
+         for dec_j in [-1,0,1]
+         if not(dec_i == 0 and dec_j == 0)) == clues[i][j]
+         for i in range(1, n-1)
+         for j in range(1, m-1)
+         if clues[i][j] != -1],
 
-    return None
+        #BORDURE sauf les coins (5cases à verifier)
+        #bordure du bas
+        [Sum((x[n-1+dec_i][j+dec_j])
+         for dec_i in [-1,0]
+         for dec_j in [-1,0,1]
+         if not(dec_i == 0 and dec_j == 0)) == clues[n-1][j]
+         for j in range(1, m-1)
+         if clues[n-1][j] != -1],
+
+         #bordure du haut
+         [Sum((x[0+dec_i][j+dec_j])
+         for dec_i in [0,1]
+         for dec_j in [-1,0,1]
+         if not(dec_i == 0 and dec_j == 0)) == clues[0][j]
+         for j in range(1, m-1)
+         if clues[0][j] != -1],
+
+         #bordure de gauche
+         [Sum((x[i+dec_i][0+dec_j])
+         for dec_i in [-1,0,1]
+         for dec_j in [0,1]
+         if not(dec_i == 0 and dec_j == 0)) == clues[i][0]
+         for i in range(1, n-1)
+         if clues[i][0] != -1],
+
+         #bordure de droite
+         [Sum((x[i+dec_i][m-1+dec_j])
+         for dec_i in [-1,0,1]
+         for dec_j in [-1,0]
+         if not(dec_i == 0 and dec_j == 0)) == clues[i][m-1]
+         for i in range(1, n-1)
+         if clues[i][m-1] != -1],
+
+         #COIN
+         #hg
+         [Sum((x[dec_i][dec_j])
+         for dec_i in [0,1]
+         for dec_j in [0,1]
+         if not(dec_i == 0 and dec_j == 0)) == clues[0][0]]
+         if clues[0][0] != -1 else [],
+
+         #bg
+         [Sum((x[n-1+dec_i][dec_j])
+         for dec_i in [0,-1]
+         for dec_j in [0,1]
+         if not(dec_i == 0 and dec_j == 0)) == clues[n-1][0]]
+         if clues[n-1][0] != -1 else [],
+
+         #hd
+         [Sum((x[dec_i][m-1+dec_j])
+         for dec_i in [0,1]
+         for dec_j in [-1,0]
+         if not(dec_i == 0 and dec_j == 0)) == clues[0][m-1]]
+         if clues[0][m-1] != -1 else [],
+
+         #bd
+         [Sum((x[n-1+dec_i][m-1+dec_j])
+         for dec_i in [-1,0]
+         for dec_j in [-1,0]
+         if not(dec_i == 0 and dec_j == 0)) == clues[n-1][m-1]]
+         if clues[n-1][m-1] != -1 else [],
+    )
+    # Solve the problem and print the solution if found
+    if solve(solver=CHOCO) is SAT:
+        print("SATISFIABLE")
+        vals = values(x)
+        bombs = []
+        for i in range(n):
+            for j in range(m):
+                if vals[i][j] == 1:
+                    bombs.append((i,j))
+        return bombs 
+    else:
+        print("UNSATISFIABLE")
+        return None
 
 
 def check_solution(clues: list[list[int]], solution: list[(int, int)]) -> bool:
